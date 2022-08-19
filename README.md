@@ -12,6 +12,37 @@ The first thing you need is a custom k6 binary with the extensions required to u
 
 You can also download the required k6 binary from the [releases page](https://github.com/grafana/k6-jslib-chaos/releases).
 
+## Test environment
+
+k6-chaos can be used in any Kubernetes cluster. In this guide we will provide instructions for using it in `Kind` and `Minikube`. 
+
+[Kind](https://kind.sigs.k8s.io/) is a tool for running local Kubernetes clusters using Docker container to emulate “nodes”. It may be used for local development or CI.
+
+[Minikube](https://github.com/kubernetes/minikube) implements a local Kubernetes cluster supporting different technologies for virtualizing the cluster's infrastructure, such as containers, VMs or running in bare metal.
+
+## Make k6-chaos image available in your cluster
+K6-chaos requires the image `grafana/k6-chaos` ot be available in your cluster. This image is not presently available from any public repository so you have to build it and push to a repository available to applications in your cluster.
+
+Build the image by cloning this repository and then executing the following command:
+```
+$ make container
+```
+
+Next sections explain how to make this image available in `Kind` and `minikube` local development environments.
+
+### Kind
+[Kind](https://kind.sigs.k8s.io/) provides the `load docker-image` command to upload images to the local registry running in the test cluster:
+```
+$ kind load docker-image grafana/k6-chaos --name <cluster>
+```
+
+### Minikube
+
+In Minikube you can upload images to the cluster using the `image load` command:
+```
+$ minikube image load grafana/k6-chaos
+```
+
 ## Exposing your application
 
 In order to access your application from the test script, it must be assigned an external IP. This can be accomplished in different ways depending on the platform you used for deploying the application.
@@ -20,12 +51,9 @@ In order to access your application from the test script, it must be assigned an
 A service of type [`LoadBalancer`](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/) receives an external IP from an external load balancer provider. The load balancer is configured in different ways depending on the platform your cluster is deployed in and the configuration of the cluster. In the following sections we provide guidelines for exposing your application when running in common development environments. If your cluster is deployed in a public cloud, check your cloud provider's documentation.
 
 #### Configuring a LoadBalancer in Kind
-[Kind](https://kind.sigs.k8s.io/) is a tool for running local Kubernetes clusters using Docker container to emulate “nodes”. It may be used for local development or CI. Services deployed in a kind cluster can be exposed to be accessed from the host machine [using metallb as a load balancer](https://kind.sigs.k8s.io/docs/user/loadbalancer).
+Services deployed in a `kind` cluster can be exposed to be accessed from the host machine [using metallb as a load balancer](https://kind.sigs.k8s.io/docs/user/loadbalancer).
 
 #### LoadBalancer in Minikube
-
-[Minikube](https://github.com/kubernetes/minikube) implements a local Kubernetes cluster supporting different technologies for virtualizing the cluster's infrastructure, such as containers, VMs or running in bare metal.
-
 Minikube's tunnel command runs as a process, creating a network route on the host to the service CIDR of the cluster using the cluster’s IP address as a gateway. The tunnel command exposes the external IP directly to any program running on the host operating system.
 
 ```console
